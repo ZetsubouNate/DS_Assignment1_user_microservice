@@ -79,7 +79,7 @@ public class UsersController {
         }
     }
 
-    @PutMapping("/{username}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<UsersResponse> updateUserAdmin(@PathVariable Integer id, @RequestBody Users user) {
         Optional<Users> existingUser = usersService.getUserByID(id);
 
@@ -96,7 +96,7 @@ public class UsersController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
         Optional<Users> user = usersService.getUserByID(id);
 
@@ -109,11 +109,11 @@ public class UsersController {
     }
 
     @PutMapping("/{username}/replace-username")
-    public ResponseEntity<Void> replaceUsername(@PathVariable String oldUsername, @RequestParam String newUsername) {
-        Optional<Users> user = usersService.getUserByName(oldUsername);
+    public ResponseEntity<Void> replaceUsername(@PathVariable String username, @RequestParam String newUsername) {
+        Optional<Users> user = usersService.getUserByName(username);
 
         if (user.isPresent()) {
-            usersService.replaceUsername(user.get(), oldUsername, newUsername);
+            usersService.replaceUsername(user.get(), username, newUsername);
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();
