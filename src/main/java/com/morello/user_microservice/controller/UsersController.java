@@ -17,7 +17,7 @@ public class UsersController {
 
     private final UsersService usersService;
 
-    @PostMapping("/login")
+    @PostMapping("/signin")
     public ResponseEntity<UsersResponse> signIn(@RequestParam String username, @RequestParam String password) {
         Optional<Users> user = usersService.authenticateUser(username, password);
 
@@ -35,6 +35,7 @@ public class UsersController {
     public ResponseEntity<UsersResponse> signup(@RequestParam String username, @RequestParam String password) {
         if(usersService.isUsernameValid(username)) {
             Users user = new Users(username, password, "Client");
+            usersService.createUser(user);
             UsersResponse response = new UsersResponse(user.getId(), user.getUsername(), user.getPassword(), user.getRole());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
@@ -43,8 +44,8 @@ public class UsersController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UsersResponse> getUser(@PathVariable Integer id) {
+    @GetMapping("/id")
+    public ResponseEntity<UsersResponse> getUser(@RequestParam Integer id) {
         Optional<Users> user = usersService.getUserByID(id);
         if (user.isPresent()) {
             Users auth = user.get();
@@ -67,8 +68,8 @@ public class UsersController {
         }
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<UsersResponse> getUserByUsername(@PathVariable String username) {
+    @GetMapping("/find")
+    public ResponseEntity<UsersResponse> getUserByUsername(@RequestParam String username) {
         Optional<Users> user = usersService.getUserByName(username);
         if (user.isPresent()) {
             Users auth = user.get();
@@ -96,9 +97,9 @@ public class UsersController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
-        Optional<Users> user = usersService.getUserByID(id);
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteUser(@RequestParam String username) {
+        Optional<Users> user = usersService.getUserByName(username);
 
         if (user.isPresent()) {
             usersService.deleteUser(user.get());
