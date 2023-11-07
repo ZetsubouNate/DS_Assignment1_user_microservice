@@ -1,13 +1,13 @@
 package com.morello.user_microservice.controller;
 
 import com.morello.user_microservice.entities.Users;
-import com.morello.user_microservice.response.UsersResponse;
 import com.morello.user_microservice.services.UsersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -17,40 +17,40 @@ public class UsersController {
 
     private final UsersService usersService;
 
+    @GetMapping("/all/users")
+    public ResponseEntity<List<Users>> getAllUsers() {
+        List<Users> users = usersService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
     @PostMapping("/signin")
-    public ResponseEntity<UsersResponse> signIn(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<Users> signIn(@RequestParam String username, @RequestParam String password) {
         Optional<Users> user = usersService.authenticateUser(username, password);
 
-        if(user.isPresent()) {
+        if (user.isPresent()) {
             Users auth = user.get();
-            UsersResponse res = new UsersResponse(auth.getId(), auth.getUsername(), auth.getPassword(), auth.getRole());
-            return ResponseEntity.ok(res);
-        }
-        else {
+            return ResponseEntity.ok(auth);
+        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UsersResponse> signup(@RequestParam String username, @RequestParam String password) {
-        if(usersService.isUsernameValid(username)) {
+    public ResponseEntity<Users> signup(@RequestParam String username, @RequestParam String password) {
+        if (usersService.isUsernameValid(username)) {
             Users user = new Users(username, password, "Client");
             usersService.createUser(user);
-            UsersResponse response = new UsersResponse(user.getId(), user.getUsername(), user.getPassword(), user.getRole());
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }
-        else {
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }
     }
 
     @GetMapping("/id")
-    public ResponseEntity<UsersResponse> getUser(@RequestParam Integer id) {
+    public ResponseEntity<Users> getUser(@RequestParam Integer id) {
         Optional<Users> user = usersService.getUserByID(id);
         if (user.isPresent()) {
-            Users auth = user.get();
-            UsersResponse res = new UsersResponse(auth.getId(), auth.getUsername(), auth.getPassword(), auth.getRole());
-            return ResponseEntity.ok(res);
+            return ResponseEntity.ok(user.get());
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -69,19 +69,18 @@ public class UsersController {
     }
 
     @GetMapping("/find")
-    public ResponseEntity<UsersResponse> getUserByUsername(@RequestParam String username) {
+    public ResponseEntity<Users> getUserByUsername(@RequestParam String username) {
         Optional<Users> user = usersService.getUserByName(username);
         if (user.isPresent()) {
             Users auth = user.get();
-            UsersResponse res = new UsersResponse(auth.getId(), auth.getUsername(), auth.getPassword(), auth.getRole());
-            return ResponseEntity.ok(res);
+            return ResponseEntity.ok(auth);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<UsersResponse> updateUserAdmin(@PathVariable Integer id, @RequestBody Users user) {
+    public ResponseEntity<Users> updateUserAdmin(@PathVariable Integer id, @RequestBody Users user) {
         Optional<Users> existingUser = usersService.getUserByID(id);
 
         if (existingUser.isPresent()) {
@@ -90,8 +89,7 @@ public class UsersController {
             updatedUser.setPassword(user.getPassword());
             updatedUser.setRole(user.getRole());
             usersService.updateUser(id, updatedUser);
-            UsersResponse response = new UsersResponse(updatedUser.getId(), updatedUser.getUsername(), updatedUser.getPassword(), updatedUser.getRole());
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(updatedUser);
         } else {
             return ResponseEntity.notFound().build();
         }
