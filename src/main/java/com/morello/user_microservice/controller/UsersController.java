@@ -51,9 +51,8 @@ public class UsersController {
     }
 
     @PostMapping("/admin/users")
-    public ResponseEntity<Users> addUser(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
-        if (usersService.isUsernameValid(username)) {
-            Users user = new Users(username, password, role);
+    public ResponseEntity<Users> addUser(@RequestBody Users user) {
+        if (usersService.isUsernameValid(user.getUsername())) {
             usersService.createUser(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } else {
