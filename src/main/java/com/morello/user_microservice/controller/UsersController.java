@@ -3,21 +3,25 @@ package com.morello.user_microservice.controller;
 import com.morello.user_microservice.entities.Users;
 import com.morello.user_microservice.services.UsersService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UsersController {
 
     private final UsersService usersService;
+    private final RestTemplate restTemplate;
 
-    @GetMapping("/all/users")
+    @GetMapping("/all")
     public ResponseEntity<List<Users>> getAllUsers() {
         List<Users> users = usersService.getAllUsers();
         return ResponseEntity.ok(users);
@@ -39,6 +43,17 @@ public class UsersController {
     public ResponseEntity<Users> signup(@RequestParam String username, @RequestParam String password) {
         if (usersService.isUsernameValid(username)) {
             Users user = new Users(username, password, "Client");
+            usersService.createUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
+    }
+
+    @PostMapping("/admin/users")
+    public ResponseEntity<Users> addUser(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
+        if (usersService.isUsernameValid(username)) {
+            Users user = new Users(username, password, role);
             usersService.createUser(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } else {
@@ -101,6 +116,13 @@ public class UsersController {
 
         if (user.isPresent()) {
             usersService.deleteUser(user.get());
+            restTemplate.exchange(
+                    "http://localhost:8081/api/devices/update-username?username={username}",
+                    HttpMethod.PUT,
+                    null,
+                    Void.class,
+                    username
+            );
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();

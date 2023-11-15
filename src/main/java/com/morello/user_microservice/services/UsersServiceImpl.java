@@ -49,7 +49,6 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public boolean isUsernameValid(String username) {
-        //username should not be already existing
         Optional<Users> existingUser = userRepository.findByUsername(username);
         return existingUser.isEmpty();
     }
