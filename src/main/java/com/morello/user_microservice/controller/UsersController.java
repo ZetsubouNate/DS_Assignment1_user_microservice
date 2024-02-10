@@ -1,6 +1,8 @@
 package com.morello.user_microservice.controller;
 
 import com.morello.user_microservice.entities.Users;
+import com.morello.user_microservice.security.AuthenticationResponse;
+import com.morello.user_microservice.security.JwtTokenUtil;
 import com.morello.user_microservice.services.UsersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
@@ -20,6 +22,7 @@ public class UsersController {
 
     private final UsersService usersService;
     private final RestTemplate restTemplate;
+    private final JwtTokenUtil jwtTokenUtil;
 
     @GetMapping("/all")
     public ResponseEntity<List<Users>> getAllUsers() {
@@ -28,14 +31,15 @@ public class UsersController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<Users> signIn(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<AuthenticationResponse> signIn(@RequestParam String username, @RequestParam String password) {
         Optional<Users> user = usersService.authenticateUser(username, password);
 
         if (user.isPresent()) {
-            Users auth = user.get();
-            return ResponseEntity.ok(auth);
+            String token = jwtTokenUtil.generateToken(user.get());
+            AuthenticationResponse response = new AuthenticationResponse(token);
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 
